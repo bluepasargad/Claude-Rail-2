@@ -9,14 +9,13 @@ NAME="${NAME_PREFIX:-node}"
 LOGLVL="${XRAY_LOG:-warning}"
 
 enc() { printf %s "$1" | sed 's#/#%2F#g'; }
-P_V="${WS_PATH}v"; P_M="${WS_PATH}m"; P_T="${WS_PATH}t"; P_U="${WS_PATH}u"
+P_V="${WS_PATH}v"; P_M="${WS_PATH}m"; P_T="${WS_PATH}t"
 
 L1="vless://${UUID}@${DOMAIN}:443?encryption=none&security=tls&sni=${DOMAIN}&type=ws&host=${DOMAIN}&path=$(enc "$P_V")#${NAME}-VLESS-WS"
 VM=$(printf '{"v":"2","ps":"%s-VMess-WS","add":"%s","port":"443","id":"%s","aid":"0","scy":"auto","net":"ws","type":"none","host":"%s","path":"%s","tls":"tls","sni":"%s"}' "$NAME" "$DOMAIN" "$UUID" "$DOMAIN" "$P_M" "$DOMAIN" | base64 -w0)
 L2="vmess://${VM}"
 L3="trojan://${UUID}@${DOMAIN}:443?security=tls&sni=${DOMAIN}&type=ws&host=${DOMAIN}&path=$(enc "$P_T")#${NAME}-Trojan-WS"
-L4="vless://${UUID}@${DOMAIN}:443?encryption=none&security=tls&sni=${DOMAIN}&type=httpupgrade&host=${DOMAIN}&path=$(enc "$P_U")#${NAME}-VLESS-HU"
-export SUB_B64=$(printf '%s\n%s\n%s\n%s\n' "$L1" "$L2" "$L3" "$L4" | base64 -w0)
+export SUB_B64=$(printf '%s\n%s\n%s\n' "$L1" "$L2" "$L3" | base64 -w0)
 
 cat > /tmp/x.json <<EOF
 {
@@ -31,10 +30,7 @@ cat > /tmp/x.json <<EOF
      "streamSettings": {"network": "ws", "wsSettings": {"path": "${P_M}"}}},
     {"listen": "127.0.0.1", "port": 10003, "protocol": "trojan",
      "settings": {"clients": [{"password": "${UUID}"}]},
-     "streamSettings": {"network": "ws", "wsSettings": {"path": "${P_T}"}}},
-    {"listen": "127.0.0.1", "port": 10004, "protocol": "vless",
-     "settings": {"clients": [{"id": "${UUID}"}], "decryption": "none"},
-     "streamSettings": {"network": "httpupgrade", "httpupgradeSettings": {"path": "${P_U}"}}}
+     "streamSettings": {"network": "ws", "wsSettings": {"path": "${P_T}"}}}
   ],
   "outbounds": [{"protocol": "freedom", "settings": {"domainStrategy": "UseIPv4"}}]
 }
